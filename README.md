@@ -1,6 +1,8 @@
-# TG5040 Development Toolchain
+# TrimUI SmartPro (TG5040) Development Boilerplate
 
 A Docker-based toolchain for building applications for the TG5040 (Trimui Smart Pro) device. This project includes a complete development environment with SDL2 support and a MinUI PAK creation system.
+
+This is based on the [union-tg5040-toolchain](https://github.com/shauninman/union-tg5040-toolchain) project, which provides a foundation for building and running applications on the TG5040 platform.
 
 ## Table of Contents
 - [Requirements](#requirements)
