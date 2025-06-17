@@ -243,8 +243,6 @@ The example features:
 - Color transitions and dynamic scaling using linear interpolation (lerp)
 - Automatic application exit when the timer reaches zero
 
-You can examine the source code in `workspace/src/main.c` to understand how controller input is handled on the TG5040.
-
 To build and run the example:
 
 ```zsh
