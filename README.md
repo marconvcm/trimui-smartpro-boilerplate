@@ -7,6 +7,10 @@ This is based on the [union-tg5040-toolchain](https://github.com/shauninman/unio
 ## Table of Contents
 - [Requirements](#requirements)
 - [Project Structure](#project-structure)
+- [Setting Up Your Development Environment](#setting-up-your-development-environment)
+  - [macOS](#macos)
+  - [Linux](#linux-debianubuntu)
+  - [Windows](#windows)
 - [Getting Started](#getting-started)
 - [Configuration](#configuration)
 - [Development Workflow](#development-workflow)
@@ -14,11 +18,13 @@ This is based on the [union-tg5040-toolchain](https://github.com/shauninman/unio
 - [Creating a PAK](#creating-a-pak)
 - [Hello World Example](#hello-world-example)
 - [Using the Logger](#using-the-logger)
+- [Troubleshooting](#troubleshooting)
 
 ## Requirements
 
 - Docker installed and running on your host system
 - Git for version control
+- Make (GNU Make)
 - Basic understanding of C programming with SDL2
 
 ## Project Structure
@@ -45,6 +51,100 @@ This is based on the [union-tg5040-toolchain](https://github.com/shauninman/unio
 When you build the project, two additional directories will be created (and are git-ignored):
 - `workspace/.build/` - Contains intermediate build files
 - `workspace/.output/` - Contains the final PAK file and distribution packages
+
+## Setting Up Your Development Environment
+
+Before getting started, you need to set up Docker, Git, and Make on your system.
+
+### macOS
+
+1. **Install Docker Desktop for Mac**:
+   - Download [Docker Desktop for Mac](https://www.docker.com/products/docker-desktop)
+   - Follow the installation instructions
+   - Start Docker Desktop and ensure it's running (look for the whale icon in your menu bar)
+
+2. **Install Git and Make**:
+   - Install [Homebrew](https://brew.sh/) if you don't have it:
+     ```zsh
+     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+     ```
+   - Install Git and Make:
+     ```zsh
+     brew install git make
+     ```
+
+3. **Verify installations**:
+   ```zsh
+   docker --version
+   git --version
+   make --version
+   ```
+
+### Linux (Debian/Ubuntu)
+
+1. **Install Docker**:
+   ```bash
+   sudo apt update
+   sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
+   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+   sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+   sudo apt update
+   sudo apt install -y docker-ce
+   sudo usermod -aG docker $USER
+   ```
+   Log out and log back in for the group changes to take effect.
+
+2. **Install Git and Make**:
+   ```bash
+   sudo apt update
+   sudo apt install -y git make
+   ```
+
+3. **Verify installations**:
+   ```bash
+   docker --version
+   git --version
+   make --version
+   ```
+
+### Windows
+
+1. **Install Docker Desktop for Windows**:
+   - Download [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop)
+   - Follow the installation instructions
+   - Enable WSL 2 if prompted
+   - Start Docker Desktop and ensure it's running (look for the whale icon in your system tray)
+
+2. **Install Git for Windows**:
+   - Download [Git for Windows](https://gitforwindows.org/)
+   - During installation, select "Use Git and optional Unix tools from the Command Prompt"
+   - Choose "Checkout as-is, commit as-is" for line endings
+
+3. **Install Make**:
+   - Option 1 - Using Chocolatey:
+     ```powershell
+     # Install Chocolatey first if you don't have it
+     Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+     
+     # Install make
+     choco install make
+     ```
+   - Option 2 - Using WSL (Windows Subsystem for Linux):
+     ```powershell
+     # Enable WSL
+     wsl --install
+     
+     # Then in your WSL terminal:
+     sudo apt update
+     sudo apt install -y make
+     ```
+
+4. **Verify installations in PowerShell or Command Prompt**:
+   ```powershell
+   docker --version
+   git --version
+   make --version
+   ```
 
 ## Getting Started
 
@@ -173,6 +273,50 @@ logger_close();
 ```
 
 Log messages include timestamps, log levels, and source file information.
+
+## Troubleshooting
+
+### Docker Issues
+
+1. **Docker daemon not running:**
+   ```
+   Cannot connect to the Docker daemon...
+   ```
+   - **Solution:** Start Docker Desktop (Mac/Windows) or run `sudo systemctl start docker` (Linux)
+
+2. **Permission issues on Linux:**
+   ```
+   Got permission denied while trying to connect to the Docker daemon socket...
+   ```
+   - **Solution:** Add your user to the docker group and log out/in:
+     ```bash
+     sudo usermod -aG docker $USER
+     ```
+
+3. **Memory/CPU limits:**
+   - If Docker builds fail due to resource constraints:
+     - Mac/Windows: Increase memory allocation in Docker Desktop settings
+     - Linux: Modify `/etc/docker/daemon.json`
+
+### Make Issues
+
+1. **Make command not found:**
+   - **Mac:** Run `brew install make`
+   - **Linux:** Run `sudo apt install make` or equivalent for your distribution
+   - **Windows:** Verify installation with Chocolatey or WSL
+
+2. **Make errors:**
+   - Check that you're running the commands from the correct directory
+   - Ensure Docker is running and properly configured
+
+### Cross-Compilation Issues
+
+1. **ARM64 toolchain errors:**
+   - Make sure you're building inside the Docker container which has the proper toolchain
+   - Run `make shell` first, then build your project inside the container
+
+2. **SDL2 linking errors:**
+   - The container has SDL2 pre-installed; avoid installing it manually on your host
 
 ## License
 
