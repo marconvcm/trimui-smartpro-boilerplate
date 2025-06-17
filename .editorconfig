@@ -1,0 +1,12 @@
+[*.c]
+indent_size = 4
+indent_style = tab
+[*.cpp]
+indent_size = 4
+indent_style = tab
+[*.h]
+indent_size = 4
+indent_style = tab
+[*.hpp]
+indent_size = 4
+indent_style = tab
