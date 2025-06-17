@@ -150,9 +150,10 @@ Before getting started, you need to set up Docker, Git, and Make on your system.
 
 1. Clone this repository:
    ```zsh
-   git clone https://github.com/yourusername/union-tg5040-toolchain.git
-   cd union-tg5040-toolchain
+   git clone git@github.com:marconvcm/trimui-smartpro-boilerplate.git --depth 1
+   cd trimui-smartpro-boilerplate
    ```
+   or fork it to your own GitHub account and clone your fork.
 
 2. Set your project name and version in `config.ini`:
    ```ini
