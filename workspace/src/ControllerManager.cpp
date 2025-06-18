@@ -28,9 +28,17 @@ namespace TG5040
 
         for (int i = 0; i < numJoysticks; ++i)
         {
+            LOG_DEBUG("Checking joystick %d: IsGameController=%s", i, SDL_IsGameController(i) ? "true" : "false");
             if (SDL_IsGameController(i))
             {
                 addController(i);
+            }
+            else
+            {
+                // Log joystick info for debugging
+                const char* name = SDL_JoystickNameForIndex(i);
+                LOG_WARN("Joystick %d ('%s') is not recognized as a game controller, adding as basic joystick", i, name ? name : "Unknown");
+                addJoystick(i);
             }
         }
 
@@ -48,12 +56,16 @@ namespace TG5040
 
         LOG_INFO("Shutting down ControllerManager");
 
-        // Close all controllers
+        // Close all controllers and joysticks
         for (auto &controller : controllers_)
         {
             if (controller->controller)
             {
                 SDL_GameControllerClose(controller->controller);
+            }
+            else if (controller->joystick)
+            {
+                SDL_JoystickClose(controller->joystick);
             }
         }
 
@@ -78,15 +90,35 @@ namespace TG5040
         switch (event.type)
         {
         case SDL_CONTROLLERDEVICEADDED:
-            addController(event.cdevice.which);
+            if (SDL_IsGameController(event.cdevice.which))
+            {
+                addController(event.cdevice.which);
+            }
+            else
+            {
+                addJoystick(event.cdevice.which);
+            }
             return true;
 
         case SDL_CONTROLLERDEVICEREMOVED:
             removeController(event.cdevice.which);
             return true;
 
+        case SDL_JOYDEVICEADDED:
+            // Only handle if it's not a game controller (to avoid double-adding)
+            if (!SDL_IsGameController(event.jdevice.which))
+            {
+                addJoystick(event.jdevice.which);
+            }
+            return true;
+
+        case SDL_JOYDEVICEREMOVED:
+            removeController(event.jdevice.which);
+            return true;
+
         case SDL_CONTROLLERBUTTONDOWN:
         {
+            LOG_DEBUG("Controller button pressed: %d", event.cbutton.button);
             GamepadButton button = static_cast<GamepadButton>(event.cbutton.button);
             updateButtonState(button, ButtonState::Pressed);
 
@@ -111,6 +143,7 @@ namespace TG5040
 
         case SDL_CONTROLLERBUTTONUP:
         {
+            LOG_DEBUG("Controller button released: %d", event.cbutton.button);
             GamepadButton button = static_cast<GamepadButton>(event.cbutton.button);
             updateButtonState(button, ButtonState::Released);
 
@@ -136,7 +169,7 @@ namespace TG5040
         case SDL_CONTROLLERAXISMOTION:
         {
             GamepadAxis axis = static_cast<GamepadAxis>(event.caxis.axis);
-            float value = event.caxis.value / 32767.0f; // Normalize to -1.0 to 1.0
+            float value = event.caxis.value / 32768.0f; // Normalize to -1.0 to 1.0
             updateAxisValue(axis, value);
 
             // Call axis event callbacks
@@ -145,6 +178,61 @@ namespace TG5040
                 callback(axis, value);
             }
 
+            return true;
+        }
+
+        // Fallback: Handle joystick events if device isn't recognized as game controller
+        case SDL_JOYBUTTONDOWN:
+        {
+            LOG_DEBUG("Joystick button pressed: %d", event.jbutton.button);
+            // Map common joystick buttons to GamepadButton enum
+            if (event.jbutton.button < 16) // Limit to reasonable button count
+            {
+                GamepadButton button = static_cast<GamepadButton>(event.jbutton.button);
+                updateButtonState(button, ButtonState::Pressed);
+
+                // Call callbacks
+                int buttonInt = static_cast<int>(button);
+                if (buttonPressedCallbacks_.count(buttonInt))
+                {
+                    for (auto &callback : buttonPressedCallbacks_[buttonInt])
+                    {
+                        callback();
+                    }
+                }
+
+                for (auto &callback : buttonEventCallbacks_)
+                {
+                    callback(button, ButtonState::Pressed);
+                }
+            }
+            return true;
+        }
+
+        case SDL_JOYBUTTONUP:
+        {
+            LOG_DEBUG("Joystick button released: %d", event.jbutton.button);
+            // Map common joystick buttons to GamepadButton enum
+            if (event.jbutton.button < 16) // Limit to reasonable button count
+            {
+                GamepadButton button = static_cast<GamepadButton>(event.jbutton.button);
+                updateButtonState(button, ButtonState::Released);
+
+                // Call callbacks
+                int buttonInt = static_cast<int>(button);
+                if (buttonReleasedCallbacks_.count(buttonInt))
+                {
+                    for (auto &callback : buttonReleasedCallbacks_[buttonInt])
+                    {
+                        callback();
+                    }
+                }
+
+                for (auto &callback : buttonEventCallbacks_)
+                {
+                    callback(button, ButtonState::Released);
+                }
+            }
             return true;
         }
 
@@ -207,10 +295,36 @@ namespace TG5040
         controllerInfo->instanceId = instanceId;
         controllerInfo->name = name ? name : "Unknown Controller";
         controllerInfo->connected = true;
+        controllerInfo->isGameController = true;
 
         controllers_.push_back(std::move(controllerInfo));
 
         LOG_INFO("Controller connected: %s (ID: %d)", name ? name : "Unknown", instanceId);
+    }
+
+    void ControllerManager::addJoystick(int deviceIndex)
+    {
+        SDL_Joystick *joystick = SDL_JoystickOpen(deviceIndex);
+        if (!joystick)
+        {
+            LOG_ERROR("Failed to open joystick %d: %s", deviceIndex, SDL_GetError());
+            return;
+        }
+
+        SDL_JoystickID instanceId = SDL_JoystickInstanceID(joystick);
+        const char *name = SDL_JoystickName(joystick);
+
+        auto controllerInfo = std::make_unique<ControllerInfo>();
+        controllerInfo->joystick = joystick;
+        controllerInfo->controller = nullptr;
+        controllerInfo->instanceId = instanceId;
+        controllerInfo->name = name ? name : "Unknown Joystick";
+        controllerInfo->connected = true;
+        controllerInfo->isGameController = false;
+
+        controllers_.push_back(std::move(controllerInfo));
+
+        LOG_INFO("Joystick connected: %s (ID: %d)", name ? name : "Unknown", instanceId);
     }
 
     void ControllerManager::removeController(SDL_JoystickID instanceId)
@@ -220,11 +334,15 @@ namespace TG5040
 
         if (it != controllers_.end())
         {
-            LOG_INFO("Controller disconnected: %s (ID: %d)", (*it)->name.c_str(), instanceId);
+            LOG_INFO("Controller/Joystick disconnected: %s (ID: %d)", (*it)->name.c_str(), instanceId);
 
             if ((*it)->controller)
             {
                 SDL_GameControllerClose((*it)->controller);
+            }
+            else if ((*it)->joystick)
+            {
+                SDL_JoystickClose((*it)->joystick);
             }
 
             controllers_.erase(it);

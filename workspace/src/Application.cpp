@@ -102,6 +102,12 @@ namespace TG5040
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
+            // Debug: Log all SDL events
+            if (event.type >= SDL_FIRSTEVENT && event.type <= SDL_LASTEVENT)
+            {
+                LOG_DEBUG("SDL Event received: type=%d", event.type);
+            }
+            
             // Check for quit event
             if (event.type == SDL_QUIT)
             {

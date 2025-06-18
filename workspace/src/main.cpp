@@ -259,6 +259,9 @@ private:
 
 int main()
 {
+    // Initialize logger to log all records to file
+    Logger::getInstance().init(LogLevel::DEBUG, "tg5040_app.log");
+    
     ConstraintDemoApp app;
 
     if (!app.initialize())
@@ -270,5 +273,9 @@ int main()
     app.run(); // Main application loop
 
     LOG_INFO("Application finished successfully");
+    
+    // Close logger
+    Logger::getInstance().close();
+    
     return 0;
 }

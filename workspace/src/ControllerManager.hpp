@@ -96,9 +96,11 @@ namespace TG5040
         struct ControllerInfo
         {
             SDL_GameController *controller = nullptr;
+            SDL_Joystick *joystick = nullptr; // Fallback for non-gamecontroller devices
             SDL_JoystickID instanceId = -1;
             std::string name;
             bool connected = false;
+            bool isGameController = false; // Track whether this is a proper game controller
         };
 
         std::vector<std::unique_ptr<ControllerInfo>> controllers_;
@@ -115,6 +117,7 @@ namespace TG5040
 
         // Helper methods
         void addController(int deviceIndex);
+        void addJoystick(int deviceIndex); // Fallback for non-gamecontroller devices
         void removeController(SDL_JoystickID instanceId);
         ControllerInfo *findController(SDL_JoystickID instanceId);
         void updateButtonState(GamepadButton button, ButtonState state);
