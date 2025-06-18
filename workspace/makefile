@@ -1,10 +1,10 @@
-# Makefile for TG5040 application
+# Makefile for TG5040 C++ application
 # This will be run inside the Docker container
 
 # Compiler and flags
-CC = $(CROSS_COMPILE)gcc
-CFLAGS = -Wall -Wextra -O2 -I$(SRC_DIR)
-LDFLAGS = -lSDL2 -lSDL2_image -lSDL2_ttf -lm
+CXX = $(CROSS_COMPILE)g++
+CXXFLAGS = -Wall -Wextra -O2 -std=c++17 -I$(SRC_DIR)
+LDFLAGS = -lSDL2 -lSDL2_image -lSDL2_ttf -lm -lstdc++
 
 # Read project name and version from config.ini
 CONFIG_INI ?= ../config.ini
@@ -29,8 +29,11 @@ PAK_TAG = $(shell echo $(PROJECT_NAME) | tr '[:upper:]' '[:lower:]' | tr -d ' ')
 PAK_VERSION = $(PROJECT_VERSION)
 
 # Source files
-SOURCES = $(wildcard $(SRC_DIR)/*.c)
-OBJECTS = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SOURCES))
+SOURCES = $(wildcard $(SRC_DIR)/*.cpp)
+OBJECTS = $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SOURCES))
+
+# Dependencies (for header changes)
+DEPENDS = $(OBJECTS:.o=.d)
 
 # Default target
 all: directories $(TARGET)
@@ -42,12 +45,15 @@ directories:
 
 # Link the application
 $(TARGET): $(OBJECTS)
-	$(CC) -o $@ $(OBJECTS) $(LDFLAGS)
+	$(CXX) -o $@ $(OBJECTS) $(LDFLAGS)
 	@echo "Build complete: $(TARGET)"
 
 # Compile source files
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
+
+# Include dependencies
+-include $(DEPENDS)
 
 # Clean target
 clean:

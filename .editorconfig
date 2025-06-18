@@ -1,12 +1,15 @@
 [*.c]
 indent_size = 4
-indent_style = tab
+indent_style = space
 [*.cpp]
 indent_size = 4
-indent_style = tab
+indent_style = space
 [*.h]
 indent_size = 4
-indent_style = tab
+indent_style = space
 [*.hpp]
 indent_size = 4
-indent_style = tab
+indent_style = space
+[*.css]
+indent_size = 4
+indent_style = space

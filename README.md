@@ -1,6 +1,14 @@
-# TrimUI SmartPro (TG5040) Development Boilerplate
+# TrimUI SmartPro (TG5040) C++ Development Framework
 
-A Docker-based toolchain for building applications for the TG5040 (Trimui Smart Pro) device. This project includes a complete development environment with SDL2 support and a MinUI PAK creation system.
+A modern C++ framework with Docker-based toolchain for building applications for the TG5040 (Trimui Smart Pro) device. This project features a complete development environment with SDL2 support, CSS-like styling system, flexbox-inspired layouts, and MinUI PAK creation.
+
+This framework provides:
+- **Modern C++17 architecture** with modular design
+- **CSS-like styling system** for easy UI theming
+- **Flexbox-inspired layout engine** for responsive designs  
+- **Component-based UI system** with extensible elements
+- **SDL2 integration** with automatic resource management
+- **MinUI PAK creation system** for easy distribution
 
 This is based on the [union-tg5040-toolchain](https://github.com/shauninman/union-tg5040-toolchain) project, which provides a foundation for building and running applications on the TG5040 platform.
 
@@ -25,7 +33,7 @@ This is based on the [union-tg5040-toolchain](https://github.com/shauninman/unio
 - Docker installed and running on your host system
 - Git for version control
 - Make (GNU Make)
-- Basic understanding of C programming with SDL2
+- Basic understanding of C++17 and SDL2
 
 ## Project Structure
 
@@ -39,13 +47,22 @@ This is based on the [union-tg5040-toolchain](https://github.com/shauninman/unio
 │   ├── setup-env.sh
 │   └── setup-toolchain.sh
 └── workspace/                 # Your development workspace
-    ├── Makefile               # Build rules for your application
-    ├── res/                   # Resources (fonts, images, etc.)
-    │   └── aller.ttf          # Default font
-    └── src/                   # Source code
-        ├── logger.c           # Logging system implementation
-        ├── logger.h           # Logging system interface
-        └── main.c             # Application entry point
+    ├── Makefile               # Build rules for your C++ application
+    ├── res/                   # Resources (fonts, images, styles, etc.)
+    │   ├── aller.ttf          # Default font
+    │   └── styles.css         # CSS-like styling definitions
+    └── src/                   # C++ source code
+        ├── Application.cpp    # Main application framework
+        ├── Application.hpp    # Application header
+        ├── Logger.cpp         # Logging system implementation
+        ├── Logger.hpp         # Logging system interface
+        ├── SDLManager.cpp     # SDL initialization and management
+        ├── SDLManager.hpp     # SDL manager header
+        ├── Style.cpp          # CSS-like styling system
+        ├── Style.hpp          # Style system header
+        ├── UIElements.cpp     # UI component implementations
+        ├── UIElements.hpp     # UI component headers
+        └── main.cpp           # Application entry point
 ```
 
 When you build the project, two additional directories will be created (and are git-ignored):
@@ -181,10 +198,11 @@ The `config.ini` file at the root of the project controls:
 
 ## Development Workflow
 
-1. Edit source files in the `workspace/src/` directory
-2. Add resources (images, fonts, etc.) to the `workspace/res/` directory
-3. Build and test your application
-4. Create a PAK for distribution
+1. Edit C++ source files in the `workspace/src/` directory
+2. Add resources (images, fonts, CSS files, etc.) to the `workspace/res/` directory  
+3. Define UI styles in `workspace/res/styles.css` using CSS-like syntax
+4. Build and test your application
+5. Create a PAK for distribution
 
 ## Build Commands
 
@@ -230,18 +248,64 @@ make pak-zip
 
 ## Hello World Example
 
-The toolchain includes a simple SDL2-based Hello World example in the `workspace/src/main.c` file. This example demonstrates:
+## Framework Features
 
-- Setting up an SDL2 application for the TG5040
-- Using the logger module
-- Handling controller input
-- Rendering text and graphics
-- Proper cleanup on exit
+### Modern C++ Architecture
+- **Modular Design**: Clean separation between SDL management, UI system, styling, and application logic
+- **RAII Principles**: Automatic resource management with smart pointers
+- **Singleton Patterns**: Thread-safe singletons for core systems (SDL, Logger, StyleSheet)
+
+### CSS-Like Styling System
+The framework includes a powerful styling system inspired by CSS:
+
+```css
+.main-container {
+    width: 1280;
+    height: 720;
+    background-color: #1e1e1e;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 50;
+}
+
+.title {
+    font-size: 48;
+    color: #ffffff;
+    margin: 20;
+}
+```
+
+### Flexbox-Inspired Layout Engine
+- **Flex Direction**: `row` or `column` layouts
+- **Justify Content**: `flex-start`, `center`, `flex-end`, `space-between`, `space-around`
+- **Align Items**: `flex-start`, `center`, `flex-end`, `stretch`
+- **Flex Grow/Shrink**: Responsive sizing based on available space
+
+### UI Component System
+- **Container**: Flexbox-enabled container for layout management
+- **Text**: Text rendering with customizable fonts and colors
+- **Button**: Interactive buttons with hover and click states
+- **Image**: Image display with automatic sizing
+- **Extensible**: Easy to create custom components by inheriting from `Element`
+
+## Hello World Example
+
+The framework includes a comprehensive countdown demo in `workspace/src/main.cpp` that demonstrates:
+
+- Setting up a C++ application using the framework
+- Creating UI hierarchies with containers, text, and buttons
+- Loading and applying CSS-like styles
+- Handling events and user interaction
+- Dynamic content updates and animations
+- Automatic application lifecycle management
 
 The example features:
-- A 10-second countdown timer with smooth animations
-- Color transitions and dynamic scaling using linear interpolation (lerp)
-- Automatic application exit when the timer reaches zero
+- A 10-second countdown timer with smooth color transitions
+- CSS-styled UI components arranged with flexbox layout
+- Interactive restart button with click handling
+- Automatic application exit when timer reaches zero
+- Keyboard controls (SPACE to restart, ESC to quit)
 
 To build and run the example:
 
